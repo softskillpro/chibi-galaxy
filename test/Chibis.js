@@ -9,10 +9,10 @@ contract("Chibis", (accounts) => {
 	});
 
 	it("mint new items", async () => {
-		const initialMintCount = parseInt(await contractInstance.currentMintCount());
-		await contractInstance.mint({from: accounts[0]});
-		const currentMintCount = parseInt(await contractInstance.currentMintCount());
-		expect(currentMintCount).to.be.above(initialMintCount, "mint count did not increase");
+		const result = await contractInstance.mint({from: accounts[0]});
+		const newTokenId = parseInt(result.receipt.logs[0].args.tokenId);
+		// console.log(JSON.stringify({newTokenId}, null, 4));
+		expect(newTokenId).to.be.above(0, "mint count did not increase");
 	});
 
 	it("non contract owner can not mint new items", async () => {
@@ -20,30 +20,25 @@ contract("Chibis", (accounts) => {
 	});
 
 	it("contract owner should set base token uri", async () => {
-		const baseURI = "https://chibis.io";
+		const baseURI = "https://chibis.io/collection/";
 		await contractInstance.setBaseURI(baseURI, {from: accounts[0]});
 		const currentBaseURI = await contractInstance.baseURI()
 		expect(currentBaseURI).to.equal(baseURI, `baseURI is not ${baseURI}`);
 	});
 
 	it("non contract owner can not set base token uri", async () => {
-		const baseURI = "https://chibis.io";
+		const baseURI = "https://chibis.io/collection/";
 		await utils.shouldThrow(contractInstance.setBaseURI(baseURI, {from: accounts[1]}));
 	});
 
-	it("contract owner can set token uri", async () => {
-		await contractInstance.mint({from: accounts[0]});
-		const tokenID = await contractInstance.currentMintCount({from: accounts[0]});
-		const tokenURI = "https://chibis.io/collection/019";
-		await contractInstance.setTokenURI(tokenID, tokenURI, {from: accounts[0]});
-		const currentTokenURI = await contractInstance.tokenURI(tokenID);
-		expect(currentTokenURI).to.equal(tokenURI, `tokenURI is not ${tokenURI}`);
-	})
-
-	it("non contract owner can not set token uri", async () => {
-		await contractInstance.mint({from: accounts[0]});
-		const tokenID = await contractInstance.currentMintCount();
-		const tokenURI = "https://chibis.io/collection/019";
-		await utils.shouldThrow(contractInstance.setTokenURI(tokenID, tokenURI, {from: accounts[1]}));
+	it("get token uri", async () => {
+		const baseURI = "https://chibis.io/collection/";
+		await contractInstance.setBaseURI(baseURI, {from: accounts[0]});
+		const result = await contractInstance.mint({from: accounts[0]});
+		const tokenId = parseInt(result.receipt.logs[0].args.tokenId);
+		const testTokenURI = `${baseURI}${tokenId}`;
+		const tokenURI = await contractInstance.tokenURI(tokenId);
+		// console.log(`testTokenURI: ${testTokenURI}, tokenURI: ${tokenURI}`);
+		expect(tokenURI).to.equal(testTokenURI, `tokenURI is not ${tokenURI}`);
 	})
 });
