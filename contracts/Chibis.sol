@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Chibis is ERC721, ERC721URIStorage, Ownable {
 
-    uint public _maxItems = 0;
+    uint public _maxItems = 200;
     uint public _currentMintCount = 0;
     uint public _totalSupply = 0;
 
@@ -17,11 +17,11 @@ contract Chibis is ERC721, ERC721URIStorage, Ownable {
 
     constructor() ERC721("Chibi", "CHIBI") {}
 
-    function mint(address to) public onlyOwner {
+    function mint(address _to) public onlyOwner {
         require(_totalSupply + 1 <= _maxItems, "mint: Surpasses cap");
         _currentMintCount += 1;
         _totalSupply += 1;
-        _mint(to, _totalSupply);
+        _mint(_to, _totalSupply);
         emit Mint(_to, _totalSupply);
     }
 

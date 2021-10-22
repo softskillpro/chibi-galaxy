@@ -32,7 +32,7 @@ contract("Chibis", (accounts) => {
 	});
 
 	it("contract owner can set token uri", async () => {
-		await contractInstance.mint(1);
+		await contractInstance.mint(accounts[1]);
 		const tokenID = await contractInstance.currentMintCount({from: accounts[0]});
 		const tokenURI = "https://chibis.io/collection/019";
 		await contractInstance.setTokenURI(tokenID, tokenURI, {from: accounts[0]});
@@ -41,7 +41,7 @@ contract("Chibis", (accounts) => {
 	})
 
 	it("non contract owner can not set token uri", async () => {
-		await contractInstance.mint(1);
+		await contractInstance.mint(accounts[1]);
 		const tokenID = await contractInstance.currentMintCount();
 		const tokenURI = "https://chibis.io/collection/019";
 		await utils.shouldThrow(contractInstance.setTokenURI(tokenID, tokenURI, {from: accounts[1]}));
