@@ -17,12 +17,13 @@ contract Chibis is ERC721, ERC721URIStorage, Ownable {
 
     constructor() ERC721("Chibi", "CHIBI") {}
 
-    function mint(address _to) public onlyOwner {
+    function mint() public onlyOwner {
         require(_totalSupply + 1 <= _maxItems, "mint: Surpasses cap");
         _currentMintCount += 1;
         _totalSupply += 1;
-        _mint(_to, _totalSupply);
-        emit Mint(_to, _totalSupply);
+        address to = msg.sender;
+        _mint(to, _totalSupply);
+        emit Mint(to, _totalSupply);
     }
 
     function setBaseURI(string memory __baseTokenURI) public onlyOwner {
