@@ -9,7 +9,7 @@ contract("Chibis", (accounts) => {
 	});
 
 	it("mint new items", async () => {
-		const result = await contractInstance.mint({from: accounts[0]});
+		const result = await contractInstance.mint(accounts[0], {from: accounts[0]});
 		const newTokenId = parseInt(result.receipt.logs[0].args.tokenId);
 		// console.log(JSON.stringify({newTokenId}, null, 4));
 		expect(newTokenId).to.be.above(0, "mint count did not increase");
@@ -34,7 +34,7 @@ contract("Chibis", (accounts) => {
 	it("get token uri", async () => {
 		const baseURI = "https://chibis.io/collection/";
 		await contractInstance.setBaseURI(baseURI, {from: accounts[0]});
-		const result = await contractInstance.mint({from: accounts[0]});
+		const result = await contractInstance.mint(accounts[0], {from: accounts[0]});
 		const tokenId = parseInt(result.receipt.logs[0].args.tokenId);
 		const testTokenURI = `${baseURI}${tokenId}`;
 		const tokenURI = await contractInstance.tokenURI(tokenId);

@@ -16,11 +16,10 @@ contract Chibis is ERC721, Ownable {
 
     constructor() ERC721("Chibi", "CHIBI") {}
 
-    function mint() public onlyOwner {
+    function mint(address to) public onlyOwner {
         require(_totalSupply + 1 <= _maxItems, "mint: Surpasses cap");
         _currentMintCount += 1;
         _totalSupply += 1;
-        address to = msg.sender;
         _mint(to, _totalSupply);
         emit Mint(to, _totalSupply);
     }
