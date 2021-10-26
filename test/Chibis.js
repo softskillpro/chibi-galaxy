@@ -9,14 +9,18 @@ contract("Chibis", (accounts) => {
 	});
 
 	it("mint new items", async () => {
-		const result = await contractInstance.mint(accounts[0], {from: accounts[0]});
-		const newTokenId = parseInt(result.receipt.logs[0].args.tokenId);
-		// console.log(JSON.stringify({newTokenId}, null, 4));
-		expect(newTokenId).to.be.above(0, "mint count did not increase");
+		const to = accounts[2];
+		const result = await contractInstance.mint(to, {from: accounts[0]});
+		// console.log(JSON.stringify({result}, null, 4));
+		const tokenId = parseInt(result.receipt.logs[0].args.tokenId);
+		const tokenOwner = result.receipt.logs[0].args.to;
+		// console.log(JSON.stringify({newTokenId, newTokenOwner, to}, null, 4));
+		expect(tokenId).to.be.above(0, "mint count did not increase");
+		expect(tokenOwner).to.be.equal(to, "token did not mint to the correct account");
 	});
 
 	it("non contract owner can not mint new items", async () => {
-		await utils.shouldThrow(contractInstance.mint({from: accounts[1]}));
+		await utils.shouldThrow(contractInstance.mint(accounts[2], {from: accounts[1]}));
 	});
 
 	it("contract owner should set base token uri", async () => {
@@ -33,9 +37,14 @@ contract("Chibis", (accounts) => {
 
 	it("get token uri", async () => {
 		const baseURI = "https://chibis.io/collection/";
+		const to = accounts[2];
 		await contractInstance.setBaseURI(baseURI, {from: accounts[0]});
-		const result = await contractInstance.mint(accounts[0], {from: accounts[0]});
+		const result = await contractInstance.mint(to, {from: accounts[0]});
+		const tokenOwner = result.receipt.logs[0].args.to;
 		const tokenId = parseInt(result.receipt.logs[0].args.tokenId);
+		expect(tokenId).to.be.above(0, "mint count did not increase");
+		expect(tokenOwner).to.be.equal(to, "token did not mint to the correct account");
+
 		const testTokenURI = `${baseURI}${tokenId}`;
 		const tokenURI = await contractInstance.tokenURI(tokenId);
 		// console.log(`testTokenURI: ${testTokenURI}, tokenURI: ${tokenURI}`);

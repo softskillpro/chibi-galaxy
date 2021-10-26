@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Chibis is ERC721, Ownable {
+contract Chibis is ERC721Enumerable, Ownable {
 
     uint public _maxItems = 200;
     uint public _currentMintCount = 0;
