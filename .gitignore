@@ -105,3 +105,4 @@ dist
 
 .idea
 contracts/ChibiApes.sol
+flattened/
