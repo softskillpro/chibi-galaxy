@@ -32,7 +32,6 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
     uint public currentRareTokenId = 101;
     uint public maxRareTokenId = 250;
     uint public currentOtherTokenId = 251;
-    uint public maxWhitelistEntries = 4000;
     uint public totalSupply = 0;
 
     bool public onlyWhitelistedCanMint = true;
@@ -61,9 +60,9 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
         return calculateRareMintAmount(numGen1sOwned, numGen2sOwned);
     }
 
-    function rareMint(bytes32[] memory proof) external payable whenNotPaused {
+    function rareMint(bytes32[] memory proof) external whenNotPaused {
         require(block.timestamp >= preMintStartTime, "not started");
-        require(currentRareTokenId < maxRareTokenId, "non available");
+        require(currentRareTokenId < maxRareTokenId, "surpass cap");
         require(isAddressInGen1Snapshot(proof, msg.sender), "invalid gen 1 holder");
 
         uint numGen1sOwned = numGeneration1sOwned();
@@ -110,7 +109,7 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
         uint maxItemsForPreMint = (numGen1sOwned * 3) + (numGen2sOwned * 1);
 
         uint numGeneration3sOwned = balanceOf(msg.sender);
-        require((numGeneration3sOwned + amount) <= maxItemsForPreMint, "no more available");
+        require((numGeneration3sOwned + amount) <= maxItemsForPreMint, "surpass pre mint cap");
 
         _mintWithoutValidation(msg.sender, currentOtherTokenId, amount);
         currentOtherTokenId += amount;
@@ -203,10 +202,6 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
 
     function setCollectionSize(uint _collectionSize) public onlyOwner {
         collectionSize = _collectionSize;
-    }
-
-    function setMaxWhitelistEntries(uint _maxWhitelistEntries) public onlyOwner {
-        maxWhitelistEntries = _maxWhitelistEntries;
     }
 
     function setMaxItemsPerTrx(uint _maxItemsPerTrx) public onlyOwner {
