@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Chibis is ERC721Enumerable, Ownable {
 
     uint public _maxItems = 200;
-    uint public _currentMintCount = 0;
     uint public _totalSupply = 0;
 
     string public _baseTokenURI;
@@ -18,7 +17,6 @@ contract Chibis is ERC721Enumerable, Ownable {
 
     function mint(address to) public onlyOwner {
         require(_totalSupply + 1 <= _maxItems, "mint: Surpasses cap");
-        _currentMintCount += 1;
         _totalSupply += 1;
         _mint(to, _totalSupply);
         emit Mint(to, _totalSupply);
