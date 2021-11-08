@@ -16,7 +16,6 @@ contract("ChibiGalaxies", (accounts) => {
 	let chibiApesContractInstance;
 	let chibiGalaxiesContractInstance;
 	let whitelistMerkleTree;
-	let gen1HoldersMerkleTree;
 
 	const testPreMintPrice = 0.06;
 	const testPublicMintPrice = 0.08;
@@ -45,12 +44,6 @@ contract("ChibiGalaxies", (accounts) => {
 		whitelistMerkleTree = new MerkleTree(list, keccak256, { hashLeaves: true, sortPairs: true });
 		await chibiGalaxiesContractInstance.setWhitelistMerkleRoot(whitelistMerkleTree.getHexRoot());
 	}
-	const setupGen1HoldersSnapshot = async () => {
-		// const list = [`${addr1}1`, `${addr2}2`, `${addr3}1`, `${addr4}1`, `${addr5}1`, `${addr6}1`];
-		const list = [addr1, addr2, addr3, addr4, addr5, addr6];
-		gen1HoldersMerkleTree = new MerkleTree(list, keccak256, { hashLeaves: true, sortPairs: true });
-		await chibiGalaxiesContractInstance.setGen1SnapshotMerkleRoot(gen1HoldersMerkleTree.getHexRoot());
-	};
 	beforeEach(async () => {
 		// console.log(accounts);
 		[owner, addr1, addr2, addr3, addr4, addr5, addr6, addr7] = accounts.slice(0, 8);
@@ -139,33 +132,27 @@ contract("ChibiGalaxies", (accounts) => {
 			if (doSetup){
 				await setupPreMintForToday();
 			}
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr));
-			const { logs } = await chibiGalaxiesContractInstance.rareMint(proof, {from: addr, value: web3.utils.toWei(`0.0`, "ether")});
+			const { logs } = await chibiGalaxiesContractInstance.rareMint({from: addr, value: web3.utils.toWei(`0.0`, "ether")});
 			const tokenIdsMinted = logs.map(log => log.event === 'Mint' ? parseInt(log.args.tokenId) : undefined).filter(item => item !== undefined);
 			const owner = await chibiGalaxiesContractInstance.ownerOf(tokenIdsMinted[0]);
 			expect(addr).to.equal(owner, "first token not owned by test account");
 			return tokenIdsMinted;
 		}
 		it("should not mint when contract paused.", async () => {
-			await setupGen1HoldersSnapshot();
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
-			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint(proof, {from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
+			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint({from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
 		it("should mint 1 rare tokens for gen 1 + gen 2 holder.", async () => {
 			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
 			await mintGen1();
 			await mintGen2();
 			const tokens = await runMintRareTest();
 			expect(tokens).with.length(1, "did not mint 1 token");
 			const rareTokenIds = tokens.filter(tokenId => tokenId >= 101 && tokenId <= 250);
 			expect(rareTokenIds).with.length(1, `did not mint 1 rare tokens`);
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
-			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint(proof, {from: addr1, value: web3.utils.toWei(`0.0`, "ether")}));
+			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint({from: addr1, value: web3.utils.toWei(`0.0`, "ether")}));
 		});
 		it("should mint 2 rare tokens for gen 1 (2) + gen 2 (3) holder.", async () => {
 			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
 			await mintGen1();
 			await mintGen1();
 			await mintGen2();
@@ -175,13 +162,11 @@ contract("ChibiGalaxies", (accounts) => {
 			expect(tokens).with.length(2, "did not mint 2 token");
 			const rareTokenIds = tokens.filter(tokenId => tokenId >= 101 && tokenId <= 250);
 			expect(rareTokenIds).with.length(2, `did not mint 2 rare tokens`);
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
-			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint(proof, {from: addr1, value: web3.utils.toWei(`0.0`, "ether")}));
+			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint({from: addr1, value: web3.utils.toWei(`0.0`, "ether")}));
 		});
 		it("should mint 1 rare token for each of 3 addresses.", async () => {
 			await setupPreMintForToday();
 			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
 			const test = async ({index, addr} = {}) => {
 				return new Promise(async (resolve, reject) => {
 					try {
@@ -208,7 +193,6 @@ contract("ChibiGalaxies", (accounts) => {
 		});
 		it("should not mint rare token for non gen 2 holder.", async () => {
 			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
 			await mintGen1();
 			await utils.shouldThrow(runMintRareTest());
 		});
@@ -217,14 +201,7 @@ contract("ChibiGalaxies", (accounts) => {
 			await mintGen2();
 			await utils.shouldThrow(runMintRareTest());
 		});
-		it("should not mint rare token for gen 1 holder not in snapshot", async () => {
-			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
-			await mintGen1({addr: addr7});
-			await mintGen2({addr: addr7});
-			await utils.shouldThrow(runMintRareTest({addr: addr7}));
-		});
-	})
+	});
 	describe("pre mint", async () => {
 		const runPreMintTest = async ({addr = addr1} = {}) => {
 			await setupPreMintForToday();
@@ -236,8 +213,7 @@ contract("ChibiGalaxies", (accounts) => {
 			// console.log(`numToMint: ${numToMint}`);
 			expect(numToMint).to.be.above(0, "number of tokens to min is 0");
 			const testValueInEther = web3.utils.toWei(`${(testPreMintPrice*numToMint)}`, "ether");
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr));
-			const { logs } = await chibiGalaxiesContractInstance.preMint(proof, {from: addr, value: testValueInEther});
+			const { logs } = await chibiGalaxiesContractInstance.preMint({from: addr, value: testValueInEther});
 			// console.log(JSON.stringify({result}, null, 4));
 			const tokenIdsMintedDuringPre = logs.map(log => log.event === 'Mint' ? parseInt(log.args.tokenId) : undefined).filter(item => item !== undefined);
 			// console.log(`tokenIdsMintedDuringPre: ${tokenIdsMintedDuringPre}`);
@@ -247,25 +223,20 @@ contract("ChibiGalaxies", (accounts) => {
 			return tokenIdsMintedDuringPre;
 		}
 		it("should not mint when contract paused.", async () => {
-			await setupGen1HoldersSnapshot();
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
-			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint(proof, {from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
+			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint({from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
 		it("should mint 4 regular tokens for gen 1 + gen 2 holder.", async () => {
 			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
 			await mintGen1();
 			await mintGen2();
 			const tokens = await runPreMintTest();
 			expect(tokens).with.length(4, "did not mint 4 tokens");
 			const regularTokenIds = tokens.filter(tokenId => tokenId >= 251);
 			expect(regularTokenIds).with.length(4, `did not mint 4 reg tokens`);
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
-			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint(proof, {from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
+			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint({from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
 		it("should mint 10 regular tokens for wallet with 2 gen 1 + 4 gen 2.", async () => {
 			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
 			await mintGen1();
 			await mintGen1();
 			await mintGen2();
@@ -276,34 +247,23 @@ contract("ChibiGalaxies", (accounts) => {
 			expect(tokens).with.length(10, "did not mint 10 tokens");
 			const regularTokenIds = tokens.filter(tokenId => tokenId >= 251);
 			expect(regularTokenIds).with.length(10, `did not mint 10 reg tokens`);
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
-			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint(proof, {from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
+			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint({from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
 		it("should mint 3 regular tokens for gen 1 holder.", async () => {
 			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
 			await mintGen1();
 			const tokens = await runPreMintTest();
 			const regularTokenIds = tokens.filter(tokenId => tokenId >= 251);
 			expect(regularTokenIds).with.length(3, `did not mint 3 regular tokens`);
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
-			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint(proof, {from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
+			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint({from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
 		it("should mint 1 regular token for gen 2 holder.", async () => {
 			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
 			await mintGen2({addr: addr7});
 			const tokens = await runPreMintTest({addr: addr7});
 			const regularTokenIds = tokens.filter(tokenId => tokenId >= 251);
 			expect(regularTokenIds).with.length(1, `did not mint 3 regular tokens`);
-			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr7));
-			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint(proof, {from: addr7, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
-		});
-		it("should not mint 3 regular tokens for gen 1 holder not in snapshot", async () => {
-			await setupContractAddresses();
-			await setupGen1HoldersSnapshot();
-			await mintGen1({addr: addr7});
-			await utils.shouldThrow(runPreMintTest({addr: addr7}));
+			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint({from: addr7, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
 	})
 	describe("public mint", async () => {

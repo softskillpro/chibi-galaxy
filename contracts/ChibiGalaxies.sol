@@ -35,7 +35,6 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
     bool public onlyWhitelistedCanMint = true;
 
     bytes32 whitelistMerkleRoot;
-    bytes32 gen1HoldersSnapshotMerkleRoot;
 
     mapping(address => uint) public ownerRareTokens;
 
@@ -60,9 +59,8 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
         return calculateRareMintAmount(numGen1sOwned, numGen2sOwned);
     }
 
-    function rareMint(bytes32[] memory proof) external whenNotPaused {
+    function rareMint() external whenNotPaused {
         require(currentRareTokenId < maxRareTokenId, "surpass cap");
-        require(isAddressInGen1Snapshot(proof, msg.sender), "invalid gen 1 holder");
 
         uint numGen1sOwned = numGeneration1sOwned();
         uint numGen2sOwned = numGeneration2sOwned();
@@ -81,7 +79,7 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
         currentRareTokenId += amount;
     }
 
-    function preMint(bytes32[] memory proof) external payable whenNotPaused {
+    function preMint() external payable whenNotPaused {
         // verify that the client sent enough eth to pay for the mint
         uint remainder = msg.value % preMintPrice;
         require(remainder == 0, "send a divisible amount of eth");
@@ -91,11 +89,6 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
         require(amount > 0, "amount to mint is 0");
 
         uint numGen1sOwned = numGeneration1sOwned();
-        if (numGen1sOwned > 0){
-            // address must be in gen 1 snapshot
-            require(isAddressInGen1Snapshot(proof, msg.sender), "invalid gen 1 holder");
-        }
-
         uint numGen2sOwned = numGeneration2sOwned();
 
         // only gen 1 or gen 2 owners can pre mint.
@@ -162,14 +155,6 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
 
     function setWhitelistMerkleRoot(bytes32 _whitelistMerkleRoot) public onlyOwner {
         whitelistMerkleRoot = _whitelistMerkleRoot;
-    }
-
-    function isAddressInGen1Snapshot(bytes32[] memory proof, address _address) public view returns (bool) {
-        return proof.verify(gen1HoldersSnapshotMerkleRoot, keccak256(abi.encodePacked(_address)));
-    }
-
-    function setGen1SnapshotMerkleRoot(bytes32 _gen1HoldersSnapshotMerkleRoot) public onlyOwner {
-        gen1HoldersSnapshotMerkleRoot = _gen1HoldersSnapshotMerkleRoot;
     }
 
     function setGeneration1ContractAddress(address _gen1ContractAddress) public onlyOwner {
