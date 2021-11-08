@@ -34,57 +34,11 @@ contract("ChibiGalaxies", (accounts) => {
 		const chibiApesMintPrice = await chibiApesContractInstance.mintPrice();
 		await chibiApesContractInstance.publicMint({from: addr, value: chibiApesMintPrice});
 	}
-	const setupMint = async ({testPreMintPriceInEther = web3.utils.toWei(`${testPreMintPrice}`, "ether"),
-		                         testPreMintStartTimeInSeconds = new Date(),
-		                         testPublicMintPriceInEther = web3.utils.toWei(`${testPublicMintPrice}`, "ether"),
-		                         testPublicMintStartTimeInSeconds = new Date(),} = {}) => {
-		await chibiGalaxiesContractInstance.setMintInfo(testPreMintPriceInEther, testPreMintStartTimeInSeconds, testPublicMintPriceInEther, testPublicMintStartTimeInSeconds);
-	}
 	const setupPreMintForToday = async () => {
-		const testPreMintPrice = 0.06;
-		const testPreMintPriceInEther = web3.utils.toWei(`${testPreMintPrice}`, "ether");
-
-		const testPreMintStartTime = new Date();
-		testPreMintStartTime.setHours(0, 0, 0, 0);
-		const testPreMintStartTimeInSeconds = web3.utils.toBN(testPreMintStartTime.getTime()/1000);
-
-		const testPublicMintPrice = 0.08;
-		const testPublicMintPriceInEther = web3.utils.toWei(`${testPublicMintPrice}`, "ether");
-
-		const testPublicMintStartTime = new Date();
-		testPublicMintStartTime.setDate(testPreMintStartTime.getDate() + 1)
-		testPublicMintStartTime.setHours(0, 0, 0, 0);
-		const testPublicMintStartTimeInSeconds = web3.utils.toBN(testPublicMintStartTime.getTime()/1000);
-
-		await setupMint({
-			testPreMintPriceInEther,
-			testPreMintStartTimeInSeconds,
-			testPublicMintPriceInEther,
-			testPublicMintStartTimeInSeconds
-		})
+		await chibiGalaxiesContractInstance.unpause();
 	}
 	const setupPublicMintForToday = async () => {
-		const testPreMintPrice = 0.06;
-		const testPreMintPriceInEther = web3.utils.toWei(`${testPreMintPrice}`, "ether");
-
-		const testPreMintStartTime = new Date();
-		testPreMintStartTime.setDate(testPreMintStartTime.getDate() - 1);
-		testPreMintStartTime.setHours(0, 0, 0, 0);
-		const testPreMintStartTimeInSeconds = web3.utils.toBN(testPreMintStartTime.getTime()/1000);
-
-		const testPublicMintPrice = 0.08;
-		const testPublicMintPriceInEther = web3.utils.toWei(`${testPublicMintPrice}`, "ether");
-
-		const testPublicMintStartTime = new Date();
-		testPublicMintStartTime.setHours(0, 0, 0, 0);
-		const testPublicMintStartTimeInSeconds = web3.utils.toBN(testPublicMintStartTime.getTime()/1000);
-
-		await setupMint({
-			testPreMintPriceInEther,
-			testPreMintStartTimeInSeconds,
-			testPublicMintPriceInEther,
-			testPublicMintStartTimeInSeconds
-		})
+		await chibiGalaxiesContractInstance.unpause();
 	}
 	const setUpWhitelist = async () => {
 		const list = [owner, addr1, addr2, addr3, addr4, addr5, addr6];
@@ -118,34 +72,20 @@ contract("ChibiGalaxies", (accounts) => {
 			const testPreMintPrice = "0.07";
 			const testPreMintPriceInEther = web3.utils.toWei(testPreMintPrice, "ether");
 
-			const testPreMintStartTime = new Date();
-			testPreMintStartTime.setFullYear(2021, 10, 10);
-			testPreMintStartTime.setHours(0, 0, 0, 0);
-			const testPreMintStartTimeInSeconds = web3.utils.toBN(testPreMintStartTime.getTime()/1000);
-
 			const testPublicMintPrice = "0.09";
 			const testPublicMintPriceInEther = web3.utils.toWei(testPublicMintPrice, "ether");
 
-			const testPublicMintStartTime = new Date();
-			testPublicMintStartTime.setFullYear(2021, 10, 11);
-			testPublicMintStartTime.setHours(0, 0, 0, 0);
-			const testPublicMintStartTimeInSeconds = web3.utils.toBN(testPublicMintStartTime.getTime()/1000);
-
 			// console.log(JSON.stringify({testPreMintPrice, testPreMintStartTime: new Date(testPreMintStartTimeInSeconds.toNumber()*1000), testPublicMintPrice, testPublicMintStartTime: new Date(testPublicMintStartTimeInSeconds.toNumber()*1000)}, null, 4));
 
-			await chibiGalaxiesContractInstance.setMintInfo(testPreMintPriceInEther, testPreMintStartTimeInSeconds, testPublicMintPriceInEther, testPublicMintStartTimeInSeconds);
+			await chibiGalaxiesContractInstance.setMintInfo(testPreMintPriceInEther, testPublicMintPriceInEther);
 
 			const preMintPrice = web3.utils.fromWei(await chibiGalaxiesContractInstance.preMintPrice(), "ether");
-			const preMintStartTime = web3.utils.toBN(await chibiGalaxiesContractInstance.preMintStartTime());
 			const publicMintPrice = web3.utils.fromWei(await chibiGalaxiesContractInstance.publicMintPrice(), "ether");
-			const publicMintStartTime = web3.utils.toBN(await chibiGalaxiesContractInstance.publicMintStartTime());
 
 			// console.log(JSON.stringify({preMintPrice, preMintStartTime: new Date(preMintStartTime.toNumber()*1000), publicMintPrice, publicMintStartTime: new Date(publicMintStartTime.toNumber()*1000)}, null, 4));
 
 			expect(preMintPrice).to.be.equal(testPreMintPrice, `pre mint price did not update to ${testPreMintPrice}`);
-			expect(preMintStartTime.toNumber()).to.be.equal(testPreMintStartTimeInSeconds.toNumber(), `pre mint start time did not update to ${testPreMintStartTime}`);
 			expect(publicMintPrice).to.be.equal(testPublicMintPrice, `public mint price did not update to ${testPublicMintPrice}`);
-			expect(publicMintStartTime.toNumber()).to.be.equal(testPublicMintStartTimeInSeconds.toNumber(), `public mint start time did not update to ${testPublicMintStartTimeInSeconds}`);
 		});
 		it("should update max items.", async () => {
 			const testMaxItems = web3.utils.toBN('6000');
@@ -194,9 +134,11 @@ contract("ChibiGalaxies", (accounts) => {
 		});
 	});
 	describe("mint rare", async () => {
-		const runMintRareTest = async ({addr = addr1} = {}) => {
+		const runMintRareTest = async ({doSetup = true, addr = addr1} = {}) => {
 			// console.log(`runMintRareTest called for ${addr}`);
-			await setupPreMintForToday();
+			if (doSetup){
+				await setupPreMintForToday();
+			}
 			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr));
 			const { logs } = await chibiGalaxiesContractInstance.rareMint(proof, {from: addr, value: web3.utils.toWei(`0.0`, "ether")});
 			const tokenIdsMinted = logs.map(log => log.event === 'Mint' ? parseInt(log.args.tokenId) : undefined).filter(item => item !== undefined);
@@ -204,12 +146,12 @@ contract("ChibiGalaxies", (accounts) => {
 			expect(addr).to.equal(owner, "first token not owned by test account");
 			return tokenIdsMinted;
 		}
-		it("should not mint before start time", async () => {
+		it("should not mint when contract paused.", async () => {
 			await setupGen1HoldersSnapshot();
 			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
 			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint(proof, {from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
-		it("should mint 1 rare tokens for gen 1 + gen 2 holder", async () => {
+		it("should mint 1 rare tokens for gen 1 + gen 2 holder.", async () => {
 			await setupContractAddresses();
 			await setupGen1HoldersSnapshot();
 			await mintGen1();
@@ -221,7 +163,7 @@ contract("ChibiGalaxies", (accounts) => {
 			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
 			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint(proof, {from: addr1, value: web3.utils.toWei(`0.0`, "ether")}));
 		});
-		it("should mint 2 rare tokens for gen 1 (2) + gen 2 (3) holder", async () => {
+		it("should mint 2 rare tokens for gen 1 (2) + gen 2 (3) holder.", async () => {
 			await setupContractAddresses();
 			await setupGen1HoldersSnapshot();
 			await mintGen1();
@@ -236,7 +178,8 @@ contract("ChibiGalaxies", (accounts) => {
 			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
 			await utils.shouldThrow(chibiGalaxiesContractInstance.rareMint(proof, {from: addr1, value: web3.utils.toWei(`0.0`, "ether")}));
 		});
-		it("should mint 1 rare token for each of 3 addresses", async () => {
+		it("should mint 1 rare token for each of 3 addresses.", async () => {
+			await setupPreMintForToday();
 			await setupContractAddresses();
 			await setupGen1HoldersSnapshot();
 			const test = async ({index, addr} = {}) => {
@@ -248,7 +191,7 @@ contract("ChibiGalaxies", (accounts) => {
 						}
 						await mintGen1({addr});
 						await mintGen2({addr});
-						const tokens = await runMintRareTest({addr});
+						const tokens = await runMintRareTest({doSetup: false, addr});
 						resolve(tokens);
 					} catch (error){
 						console.error(error);
@@ -263,13 +206,13 @@ contract("ChibiGalaxies", (accounts) => {
 			const success = results.filter(result => result.length === 1 && result[0] >= 101 && result[0] <= 250).length === 3;
 			expect(success, "error minting 3 rare tokens").to.be.true
 		});
-		it("should not mint rare token for non gen 2 holder", async () => {
+		it("should not mint rare token for non gen 2 holder.", async () => {
 			await setupContractAddresses();
 			await setupGen1HoldersSnapshot();
 			await mintGen1();
 			await utils.shouldThrow(runMintRareTest());
 		});
-		it("should not mint rare token for non gen 1 holder", async () => {
+		it("should not mint rare token for non gen 1 holde.", async () => {
 			await setupContractAddresses();
 			await mintGen2();
 			await utils.shouldThrow(runMintRareTest());
@@ -303,12 +246,12 @@ contract("ChibiGalaxies", (accounts) => {
 			expect(addr).to.equal(owner, "first token not owned by test account");
 			return tokenIdsMintedDuringPre;
 		}
-		it("should not mint before start time", async () => {
+		it("should not mint when contract paused.", async () => {
 			await setupGen1HoldersSnapshot();
 			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
 			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint(proof, {from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
-		it("should mint 4 regular tokens for gen 1 + gen 2 holder", async () => {
+		it("should mint 4 regular tokens for gen 1 + gen 2 holder.", async () => {
 			await setupContractAddresses();
 			await setupGen1HoldersSnapshot();
 			await mintGen1();
@@ -320,7 +263,7 @@ contract("ChibiGalaxies", (accounts) => {
 			const proof = gen1HoldersMerkleTree.getHexProof(keccak256(addr1));
 			await utils.shouldThrow(chibiGalaxiesContractInstance.preMint(proof, {from: addr1, value: web3.utils.toWei(`${testPreMintPrice}`, "ether")}));
 		});
-		it("should mint 10 regular tokens for wallet with 2 gen 1 + 4 gen 2", async () => {
+		it("should mint 10 regular tokens for wallet with 2 gen 1 + 4 gen 2.", async () => {
 			await setupContractAddresses();
 			await setupGen1HoldersSnapshot();
 			await mintGen1();
@@ -411,7 +354,7 @@ contract("ChibiGalaxies", (accounts) => {
 
 			return tokenIdsMinted;
 		}
-		it("should not mint before start time", async () => {
+		it("should not mint when contract paused", async () => {
 			const proof = whitelistMerkleTree.getHexProof(keccak256(addr1));
 			await utils.shouldThrow(chibiGalaxiesContractInstance.publicMint(proof, {from: addr1, value: web3.utils.toWei(`${testPublicMintPrice}`, "ether")}));
 		});

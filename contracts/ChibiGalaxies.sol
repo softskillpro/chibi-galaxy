@@ -22,9 +22,7 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
     string public baseTokenURI;
 
     uint public preMintPrice = 0.06 ether;
-    uint public preMintStartTime = 1636581600;  // Initializing 11/10/2021 05:00 PM EST
     uint public publicMintPrice = 0.08 ether;
-    uint public publicMintStartTime = 1636668000; // Initializing 11/11/2021 5:00 PM EST
     uint public collectionSize = 7000;
     uint public maxItemsPerTx = 5;
     uint public currentGiveawayTokenId = 1;
@@ -46,7 +44,9 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
     Generation1s gen1ContractInstance;
     Generation2s gen2ContractInstance;
 
-    constructor() ERC721("ChibiGalaxies", "CHIBIGALAXY") {}
+    constructor() ERC721("ChibiGalaxies", "CHIBIGALAXY") {
+        pause();
+    }
 
     function giveawayMint(address to, uint amount) external onlyOwner {
         require((currentGiveawayTokenId + amount) <= maxGiveawayTokenId, "surpasses cap");
@@ -61,7 +61,6 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
     }
 
     function rareMint(bytes32[] memory proof) external whenNotPaused {
-        require(block.timestamp >= preMintStartTime, "not started");
         require(currentRareTokenId < maxRareTokenId, "surpass cap");
         require(isAddressInGen1Snapshot(proof, msg.sender), "invalid gen 1 holder");
 
@@ -83,9 +82,6 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
     }
 
     function preMint(bytes32[] memory proof) external payable whenNotPaused {
-        // make sure the current time is greater than or equal to the pre mint start time
-        require(block.timestamp >= preMintStartTime && block.timestamp < publicMintStartTime, "not running");
-
         // verify that the client sent enough eth to pay for the mint
         uint remainder = msg.value % preMintPrice;
         require(remainder == 0, "send a divisible amount of eth");
@@ -116,9 +112,6 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
     }
 
     function publicMint(bytes32[] memory proof) external payable whenNotPaused {
-        // make sure the current time is greater than or equal to the pre mint start time
-        require(block.timestamp >= publicMintStartTime, "not started");
-
         // verify that the client sent enough eth to pay for the mint
         uint remainder = msg.value % publicMintPrice;
         require(remainder == 0, "send a divisible amount of eth");
@@ -189,11 +182,9 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
         gen2ContractInstance = Generation2s(_gen2ContractAddress);
     }
 
-    function setMintInfo(uint _preMintPrice, uint _preMintStartTime, uint _publicMintPrice, uint _publicMintStartTime) public onlyOwner {
+    function setMintInfo(uint _preMintPrice, uint _publicMintPrice) public onlyOwner {
         preMintPrice = _preMintPrice;
-        preMintStartTime = _preMintStartTime;
         publicMintPrice = _publicMintPrice;
-        publicMintStartTime = _publicMintStartTime;
     }
 
     function setOnlyWhitelistedCanMint(bool _onlyWhitelistedCanMint) public onlyOwner {
