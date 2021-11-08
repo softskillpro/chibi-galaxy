@@ -106,3 +106,8 @@ dist
 .idea
 contracts/ChibiApes.sol
 flattened/
+
+secret.json
+artifacts
+cache
+chibi-galaxy-reqs
