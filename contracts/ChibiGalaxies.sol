@@ -167,14 +167,14 @@ contract ChibiGalaxies is ERC721, Pausable, Ownable {
         maxItemsForSpecialMint = _maxItemsForSpecialMint;
     }
 
-    function isAddressInSpecialEventWhitelisted(bytes32[] memory proof, address _address) public view returns (bool) {
+    function isAddressWhitelistedForSpecialEvent(bytes32[] memory proof, address _address) public view returns (bool) {
         return isAddressInMerkleRoot(specialEventWhitelistMerkleRoot, proof, _address);
     }
 
     function specialEventMint(bytes32[] memory proof) external payable whenNotPaused {
         // specialEventMintPaused is set by owner calling pauseSpecialEventMint and unpauseSpecialEventMint
         require(!specialEventMintPaused, "mint paused");
-        require(isAddressInSpecialEventWhitelisted(proof, msg.sender), "not eligible");
+        require(isAddressWhitelistedForSpecialEvent(proof, msg.sender), "not eligible");
 
         // verify that the client sent enough eth to pay for the mint
         uint remainder = msg.value % publicMintPrice;
