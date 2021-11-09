@@ -4,6 +4,7 @@ async function shouldThrow(promise) {
 		assert(true);
 	}
 	catch (err) {
+		// console.error(err);
 		return;
 	}
 	assert(false, "The contract did not throw.");
